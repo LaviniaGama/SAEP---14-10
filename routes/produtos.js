@@ -14,17 +14,17 @@ router.get('/listar', (req, res) => {
 
 // Cadastrar novos produtos
 router.post('/cadastrar', (req, res) => {
-  const { nome, quantidade, valor, categoria } = req.body;
+  const { nome, quantidade, valor, categoria, unidade_medida } = req.body;
 
-  if (!nome || quantidade == null || valor == null || !categoria) {
+  if (!nome || quantidade == null || valor == null || !categoria || !unidade_medida) {
     return res.status(400).json({
       error: 'Payload inválido. Campos obrigatórios: nome, quantidade, valor, categoria',
     });
   }
 
   db.query(
-    'INSERT INTO produtos (nome, valor, quantidade, categoria) VALUES (?, ?, ?, ?)',
-    [nome, valor, quantidade, categoria],
+    'INSERT INTO produtos (nome, valor, quantidade, categoria, unidade_medida) VALUES (?, ?, ?, ?, ?)',
+    [nome, valor, quantidade, categoria, unidade_medida],
     (err, results) => {
       if (err) {
         return res.status(500).json({ error: 'Erro ao cadastrar produto' });
