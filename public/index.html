@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Produtos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-layer"></div>
+  <div class="particles"></div>
+
+  <header class="hero">
+    <div class="hero-content">
+      <span class="eye-symbol">⚡</span>
+      <h1 class="title">Gestão de Produtos</h1>
+      <p class="subtitle">— Controle de Estoque —</p>
+      <div class="divider">
+        <span></span>
+        <span class="diamond">◆</span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Formulário -->
+    <section class="card form-card">
+      <div class="card-header">
+        <h2>✦ Novo Produto</h2>
+      </div>
+
+      <form id="product-form" class="product-form" novalidate>
+        <div class="form-group">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required placeholder="Ex: Espada Musou" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantidade">Quantidade</label>
+            <input type="number" id="quantidade" name="quantidade" min="0" step="1" required placeholder="0" />
+          </div>
+
+          <div class="form-group">
+            <label for="valor">Valor (R$)</label>
+            <input type="number" id="valor" name="valor" step="0.01" min="0" required placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="categoria">Categoria</label>
+            <input type="text" id="categoria" name="categoria" required placeholder="Ex: Armas" />
+          </div>
+
+          <div class="form-group">
+            <label for="unidade_medida">Unidade de Medida</label>
+            <select id="unidade_medida" name="unidade_medida" required>
+              <option value="">Selecione...</option>
+              <option value="un">Unidade</option>
+              <option value="kg">Quilograma</option>
+              <option value="g">Grama</option>
+              <option value="l">Litro</option>
+              <option value="ml">Mililitro</option>
+              <option value="cx">Caixa</option>
+              <option value="pct">Pacote</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          <span class="btn-icon">⚡</span>
+          <span>Cadastrar</span>
+        </button>
+
+        <div id="form-message" class="message"></div>
+      </form>
+    </section>
+
+    <!-- Lista -->
+    <section class="card list-card">
+      <div class="card-header">
+        <h2>✦ Produtos Cadastrados</h2>
+        <div class="header-actions">
+          <input
+            type="search"
+            id="search-input"
+            class="search-input"
+            placeholder="Buscar por nome ou categoria..."
+          />
+          <button id="reload-btn" class="btn-ghost" title="Recarregar">↻</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="products-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Qtd</th>
+              <th>Valor</th>
+              <th>Categoria</th>
+              <th>Unidade</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+        <div id="loading" class="loading hidden">Carregando produtos...</div>
+        <div id="empty-state" class="empty-state hidden">
+          Nenhum produto cadastrado ainda.
+        </div>
+      </div>
+
+      <div class="summary">
+        <span>Total de itens: <strong id="sum-count">0</strong></span>
+        <span>Valor total: <strong id="sum-value">R$ 0,00</strong></span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>⚡ Sistema de Gestão de Produtos ⚡</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
