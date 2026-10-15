@@ -462,6 +462,40 @@ tbody tr:hover td:first-child {
   text-shadow: 0 0 8px rgba(232, 196, 106, 0.3);
 }
 
+.alert-card {
+  grid-column: 1 / -1;
+}
+
+.warning-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.warning-table th,
+.warning-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(155, 92, 255, 0.12);
+  text-align: left;
+}
+
+.warning-table th {
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.warning-table td {
+  color: var(--text-light);
+}
+
+.alert-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 18px 12px;
+}
+
 /* ---------- Mensagens ---------- */
 .message {
   font-size: 0.9rem;

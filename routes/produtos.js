@@ -4,7 +4,18 @@ const db = require('../db');
 
 // Listar produtos
 router.get('/listar', (req, res) => {
-  db.query('SELECT * FROM produtos', (err, results) => {
+  const querySQL = `
+    SELECT p.*, m.datas AS ultima_movimentacao
+    FROM produtos p
+    LEFT JOIN (
+      SELECT DISTINCT ON (produtos_id) produtos_id, datas
+      FROM movimentacoes
+      ORDER BY produtos_id, datas DESC
+    ) m ON m.produtos_id = p.id
+    ORDER BY p.id ASC;
+  `;
+
+  db.query(querySQL, (err, results) => {
     if (err) {
       return res.status(500).json({ error: 'Erro ao buscar produtos' });
     }

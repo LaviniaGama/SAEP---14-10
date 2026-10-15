@@ -109,6 +109,7 @@
               <th>Valor</th>
               <th>Categoria</th>
               <th>Unidade</th>
+              <th>Data</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -124,6 +125,26 @@
       <div class="summary">
         <span>Total de itens: <strong id="sum-count">0</strong></span>
         <span>Valor total: <strong id="sum-value">R$ 0,00</strong></span>
+      </div>
+    </section>
+
+    <section class="card alert-card">
+      <div class="card-header">
+        <h2>⚠️ Itens acima de 100 unidades</h2>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="warning-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Categoria</th>
+            </tr>
+          </thead>
+          <tbody id="limit-alerts-body"></tbody>
+        </table>
       </div>
     </section>
   </main>

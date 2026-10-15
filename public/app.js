@@ -8,6 +8,7 @@ const sumValue = document.getElementById('sum-value');
 const searchInput = document.getElementById('search-input');
 const reloadBtn = document.getElementById('reload-btn');
 const messageDiv = document.getElementById('form-message');
+const limitAlertsBody = document.getElementById('limit-alerts-body');
 
 let todosProdutos = [];
 
@@ -28,6 +29,17 @@ const formatarMoeda = (valor) => {
     style: 'currency',
     currency: 'BRL'
   }).format(valor || 0);
+};
+
+const formatarData = (data) => {
+  if (!data) return '—';
+
+  const valor = data.includes('T') ? data : `${data}T12:00:00`;
+  const dt = new Date(valor);
+
+  if (Number.isNaN(dt.getTime())) return '—';
+
+  return new Intl.DateTimeFormat('pt-BR').format(dt);
 };
 
 function obterStatusProduto(produto) {
@@ -53,6 +65,32 @@ function atualizarResumo(lista) {
   if (sumValue) sumValue.textContent = formatarMoeda(valorTotal);
 }
 
+function renderizarAlertasLimite(lista) {
+  if (!limitAlertsBody) return;
+
+  const produtosAcima = (Array.isArray(lista) ? lista : []).filter((prod) => (Number(prod.quantidade) || 0) > 100);
+
+  if (!produtosAcima.length) {
+    limitAlertsBody.innerHTML = `
+      <tr>
+        <td colspan="4" class="alert-empty">Nenhum produto acima do limite de 100 unidades.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  limitAlertsBody.innerHTML = produtosAcima
+    .map((prod) => `
+      <tr>
+        <td>#${prod.id}</td>
+        <td><strong>${prod.nome}</strong></td>
+        <td>${Number(prod.quantidade) || 0}</td>
+        <td>${prod.categoria || '-'}</td>
+      </tr>
+    `)
+    .join('');
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
   tbody.innerHTML = '';
@@ -60,7 +98,7 @@ function renderizarTabela(lista) {
   if (!Array.isArray(lista) || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; color: var(--text-muted, #a091c4); padding: 20px;">
+        <td colspan="9" style="text-align: center; color: var(--text-muted, #a091c4); padding: 20px;">
           Nenhum produto encontrado.
         </td>
       </tr>`;
@@ -81,6 +119,7 @@ function renderizarTabela(lista) {
       <td>${formatarMoeda(val)}</td>
       <td>${prod.categoria}</td>
       <td>${prod.unidade_medida}</td>
+      <td>${formatarData(prod.ultima_movimentacao)}</td>
       <td>
         <span class="status-badge ${status.classe}">${status.texto}</span>
       </td>
@@ -97,6 +136,7 @@ function renderizarTabela(lista) {
   });
 
   atualizarResumo(lista);
+  renderizarAlertasLimite(lista);
 }
 
 
