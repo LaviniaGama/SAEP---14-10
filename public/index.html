@@ -24,7 +24,7 @@
         <button class="nav-item" data-view="produto-view" type="button">Novo Produto</button>
         <button class="nav-item" data-view="entrada-view" type="button">Entradas</button>
         <button class="nav-item" data-view="saida-view" type="button">Saídas</button>
-        <button class="nav-item" data-view="historico-view" type="button">Histórico</button>
+        <button class="nav-item" data-view="movimentacao-view" type="button">Movimentações</button>
       </nav>
     </aside>
 
@@ -227,31 +227,45 @@
         </section>
       </section>
 
-      <section id="historico-view" class="view-panel hidden">
+      <section id="movimentacao-view" class="view-panel hidden">
         <header class="topbar">
           <div>
             <p class="eyebrow">Movimentações</p>
-            <h1>Histórico</h1>
+            <h1>Movimentações</h1>
           </div>
         </header>
 
         <section class="card analytics-card full-width">
           <div class="card-header">
-            <h2>🧾 Histórico de entradas e saídas</h2>
+            <h2>🧾 Consultar movimentações por período</h2>
+          </div>
+
+          <div class="filter-row">
+            <label>
+              <span>De</span>
+              <input type="date" id="data-inicial-movimentacao" readonly />
+            </label>
+            <label>
+              <span>Até</span>
+              <input type="date" id="data-final-movimentacao" readonly />
+            </label>
+            <button id="btn-consultar-movimentacoes" type="button" class="btn-primary small-btn">Buscar</button>
           </div>
 
           <div class="table-wrapper">
             <table class="history-table">
               <thead>
                 <tr>
-                  <th>Data</th>
-                  <th>Tipo</th>
                   <th>Produto</th>
-                  <th>Quantidade</th>
-                  <th>Categoria</th>
+                  <th>Unidade</th>
+                  <th>Entradas</th>
+                  <th>Saídas</th>
+                  <th>Saldo no período</th>
+                  <th>Valor entradas</th>
+                  <th>Valor saídas</th>
                 </tr>
               </thead>
-              <tbody id="history-body-alt"></tbody>
+              <tbody id="movimentacao-body"></tbody>
             </table>
           </div>
         </section>

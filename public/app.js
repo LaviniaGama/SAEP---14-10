@@ -17,6 +17,10 @@ const topEntradasBody = document.getElementById('top-entradas-body');
 const topEntradasBodyAlt = document.getElementById('top-entradas-body-alt');
 const historyBody = document.getElementById('history-body');
 const historyBodyAlt = document.getElementById('history-body-alt');
+const movimentacaoBody = document.getElementById('movimentacao-body');
+const dataInicialMovimentacao = document.getElementById('data-inicial-movimentacao');
+const dataFinalMovimentacao = document.getElementById('data-final-movimentacao');
+const btnConsultarMovimentacoes = document.getElementById('btn-consultar-movimentacoes');
 
 let todosProdutos = [];
 
@@ -157,6 +161,41 @@ function preencherHistorico(itens) {
   preencherHistoricoEmTabela(historyBody, itens);
 }
 
+function preencherMovimentacoes(itens) {
+  if (!movimentacaoBody) return;
+
+  if (!Array.isArray(itens) || !itens.length) {
+    movimentacaoBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="alert-empty">Nenhuma movimentação encontrada para o período informado.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  movimentacaoBody.innerHTML = itens
+    .map((item) => {
+      const entradas = Number(item.total_de_entradas ?? 0);
+      const saidas = Number(item.total_de_saidas ?? 0);
+      const saldo = entradas - saidas;
+      const valorEntradas = Number(item.valor_total_financeiro_das_entradas ?? 0);
+      const valorSaidas = Number(item.valor_financeiro_das_saidas ?? 0);
+
+      return `
+        <tr>
+          <td><strong>${item.nome_do_produto || 'Produto'}</strong></td>
+          <td>${item.unidade_medida || '-'}</td>
+          <td>${entradas}</td>
+          <td>${saidas}</td>
+          <td>${saldo}</td>
+          <td>${formatarMoeda(valorEntradas)}</td>
+          <td>${formatarMoeda(valorSaidas)}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
   if (!tbody) {
@@ -247,6 +286,7 @@ async function carregarEstatisticas() {
     if (topSaidasBodyAlt) preencherTabelaResumo(topSaidasBodyAlt, saidas, 'saídas');
     if (topEntradasBodyAlt) preencherTabelaResumo(topEntradasBodyAlt, entradas, 'entradas');
     if (historyBodyAlt) preencherHistoricoEmTabela(historyBodyAlt, historico);
+    await carregarMovimentacoes();
   } catch (err) {
     console.error('Erro ao carregar estatísticas:', err);
     if (topSaidasBody) topSaidasBody.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar saídas.</td></tr>';
@@ -255,6 +295,45 @@ async function carregarEstatisticas() {
     if (topSaidasBodyAlt) topSaidasBodyAlt.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar saídas.</td></tr>';
     if (topEntradasBodyAlt) topEntradasBodyAlt.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar entradas.</td></tr>';
     if (historyBodyAlt) historyBodyAlt.innerHTML = '<tr><td colspan="5" class="alert-empty">Erro ao carregar histórico.</td></tr>';
+  }
+}
+
+async function carregarMovimentacoes() {
+  const dataInicial = dataInicialMovimentacao ? dataInicialMovimentacao.value : '';
+  const dataFinal = dataFinalMovimentacao ? dataFinalMovimentacao.value : '';
+
+  if (!dataInicial || !dataFinal) {
+    const hoje = new Date();
+    const inicioPadrao = new Date(hoje);
+    inicioPadrao.setDate(hoje.getDate() - 30);
+
+    const formatarDataInput = (date) => date.toISOString().slice(0, 10);
+
+    if (dataInicialMovimentacao) dataInicialMovimentacao.value = formatarDataInput(inicioPadrao);
+    if (dataFinalMovimentacao) dataFinalMovimentacao.value = formatarDataInput(hoje);
+  }
+
+  const inicio = dataInicialMovimentacao ? dataInicialMovimentacao.value : '';
+  const fim = dataFinalMovimentacao ? dataFinalMovimentacao.value : '';
+
+  if (!inicio || !fim) {
+    if (movimentacaoBody) {
+      movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Informe as datas para consultar.</td></tr>';
+    }
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/movimentacoes?data_inicial=${encodeURIComponent(inicio)}&data_final=${encodeURIComponent(fim)}`);
+    if (!res.ok) throw new Error('Erro ao consultar movimentações');
+
+    const dados = await res.json();
+    preencherMovimentacoes(dados);
+  } catch (err) {
+    console.error('Erro ao carregar movimentações do período:', err);
+    if (movimentacaoBody) {
+      movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Erro ao consultar movimentações.</td></tr>';
+    }
   }
 }
 
@@ -275,6 +354,12 @@ if (reloadBtn) {
   reloadBtn.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     carregarProdutos();
+  });
+}
+
+if (btnConsultarMovimentacoes) {
+  btnConsultarMovimentacoes.addEventListener('click', () => {
+    carregarMovimentacoes();
   });
 }
 
