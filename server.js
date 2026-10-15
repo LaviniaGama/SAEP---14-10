@@ -1,18 +1,9 @@
 require('dotenv').config();
 
 const app = require('./app');
-const port = process.env.PORT || 3000;
 
-const express = require('express');
-const cors = require('cors');
-const produtosRouter = require('./routes/produtos');
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-app.use('/api', produtosRouter);
-
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor iniciado na porta ${PORT}`);
 });
