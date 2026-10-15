@@ -115,7 +115,7 @@ html, body {
   display: grid;
   grid-template-columns: 400px 1fr;
   gap: 28px;
-  align-items: start;
+  align-items: center;
 }
 
 @media (max-width: 950px) {
@@ -140,6 +140,7 @@ html, body {
   max-width: 420px;
   width: 100%;
   margin: 0 auto;
+  align-self: center;
 }
 
 .card::before, .card::after {
