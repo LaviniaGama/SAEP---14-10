@@ -3,11 +3,14 @@ const router = express.Router();
 const db = require('../db');
 
 function obterDataAtual() {
-  const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-  const dia = String(hoje.getDate()).padStart(2, '0');
+  const formatador = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 
+  const [ano, mes, dia] = formatador.format(new Date()).split('-');
   return `${ano}-${mes}-${dia}`;
 }
 

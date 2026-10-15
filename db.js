@@ -83,7 +83,7 @@ const criarProdutos = `
     quantidade INTEGER NOT NULL,
     categoria VARCHAR(255) NOT NULL,
     unidade_medida VARCHAR(50) NOT NULL,
-    data_cadastro DATE NOT NULL DEFAULT CURRENT_DATE
+    data_cadastro DATE NOT NULL DEFAULT (timezone('America/Sao_Paulo', now())::date)
   );
 `;
 
@@ -124,7 +124,7 @@ async function iniciarBanco() {
   try {
     await pool.query(criarProdutos);
     await pool.query(adicionarColunaDataCadastro);
-    await pool.query('UPDATE produtos SET data_cadastro = CURRENT_DATE WHERE data_cadastro IS NULL');
+    await pool.query("UPDATE produtos SET data_cadastro = timezone('America/Sao_Paulo', now())::date WHERE data_cadastro IS NULL");
     await pool.query(criarMovimentacoes);
 
     const { rows } = await pool.query('SELECT COUNT(*) AS total FROM produtos');
