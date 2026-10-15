@@ -72,9 +72,20 @@ function atualizarResumo(lista) {
   const produtos = Array.isArray(lista) ? lista : [];
   const totalItens = produtos.reduce((acc, prod) => acc + (Number(prod.quantidade) || 0), 0);
   const valorTotal = produtos.reduce((acc, prod) => acc + ((Number(prod.quantidade) || 0) * (Number(prod.valor) || 0)), 0);
+  const alertas = produtos.filter((prod) => (Number(prod.quantidade) || 0) > 100);
 
+  const totalCard = document.getElementById('sidebar-total');
+  const alertCard = document.getElementById('alert-count');
+
+  if (totalCard) totalCard.textContent = produtos.length;
   if (sumCount) sumCount.textContent = totalItens;
   if (sumValue) sumValue.textContent = formatarMoeda(valorTotal);
+  if (alertCard) alertCard.textContent = alertas.length;
+
+  const cardAlerta = document.querySelector('.stat-card:last-child');
+  if (cardAlerta) {
+    cardAlerta.classList.toggle('urgent', alertas.length > 0);
+  }
 }
 
 function renderizarAlertasLimite(lista) {

@@ -184,6 +184,15 @@ button, input, select {
   line-height: 1;
 }
 
+.stat-card.urgent {
+  border-color: rgba(255, 139, 154, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 139, 154, 0.2), 0 16px 28px rgba(255, 107, 131, 0.12);
+}
+
+.stat-card.urgent strong {
+  color: var(--danger);
+}
+
 .panel-row {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
