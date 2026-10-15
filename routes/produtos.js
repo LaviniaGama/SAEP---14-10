@@ -2,10 +2,19 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+function obterDataAtual() {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoje.getDate()).padStart(2, '0');
+
+  return `${ano}-${mes}-${dia}`;
+}
+
 // Listar produtos
 router.get('/listar', (req, res) => {
   const querySQL = `
-    SELECT p.*, m.datas AS ultima_movimentacao
+    SELECT p.*, COALESCE(m.datas, p.data_cadastro) AS ultima_movimentacao
     FROM produtos p
     LEFT JOIN (
       SELECT DISTINCT ON (produtos_id) produtos_id, datas
@@ -26,6 +35,7 @@ router.get('/listar', (req, res) => {
 // Cadastrar novos produtos
 router.post('/cadastrar', (req, res) => {
   const { nome, quantidade, valor, categoria, unidade_medida } = req.body;
+  const dataAtual = obterDataAtual();
 
   if (!nome || quantidade == null || valor == null || !categoria || !unidade_medida) {
     return res.status(400).json({
@@ -34,17 +44,29 @@ router.post('/cadastrar', (req, res) => {
   }
 
   db.query(
-    'INSERT INTO produtos (nome, valor, quantidade, categoria, unidade_medida) VALUES (?, ?, ?, ?, ?) RETURNING id',
-    [nome, valor, quantidade, categoria, unidade_medida],
+    'INSERT INTO produtos (nome, valor, quantidade, categoria, unidade_medida, data_cadastro) VALUES (?, ?, ?, ?, ?, ?) RETURNING id',
+    [nome, valor, quantidade, categoria, unidade_medida, dataAtual],
     (err, results) => {
       if (err) {
         return res.status(500).json({ error: 'Erro ao cadastrar produto' });
       }
 
-      return res.status(201).json({
-        message: 'Produto cadastrado com sucesso',
-        id: results.rows?.[0]?.id ?? results.insertId,
-      });
+      const idProduto = results.rows?.[0]?.id ?? results.insertId;
+
+      db.query(
+        'INSERT INTO movimentacoes (datas, tipo, quantidade, produtos_id) VALUES (?, ?, ?, ?)',
+        [dataAtual, 'entrada', quantidade, idProduto],
+        (errMov, ) => {
+          if (errMov) {
+            return res.status(500).json({ error: 'Produto cadastrado, mas não foi possível registrar a data do cadastro.' });
+          }
+
+          return res.status(201).json({
+            message: 'Produto cadastrado com sucesso',
+            id: idProduto,
+          });
+        }
+      );
     }
   );
 });
@@ -82,7 +104,7 @@ function registrarMovimentacao({ id, quantidade, tipo, res }) {
     return res.status(400).json({ error: 'Informe um ID e uma quantidade maior que zero.' });
   }
 
-  const dataAtual = new Date().toISOString().slice(0, 10);
+  const dataAtual = obterDataAtual();
 
   db.query('SELECT quantidade FROM produtos WHERE id = ?', [id], (err, produtoResult) => {
     if (err) {
@@ -311,3 +333,4 @@ router.get('/maiores-entradas', (req, res) => {
 });
 
 module.exports = router;
+module.exports.obterDataAtual = obterDataAtual;

@@ -82,8 +82,14 @@ const criarProdutos = `
     valor NUMERIC(10,2) NOT NULL,
     quantidade INTEGER NOT NULL,
     categoria VARCHAR(255) NOT NULL,
-    unidade_medida VARCHAR(50) NOT NULL
+    unidade_medida VARCHAR(50) NOT NULL,
+    data_cadastro DATE NOT NULL DEFAULT CURRENT_DATE
   );
+`;
+
+const adicionarColunaDataCadastro = `
+  ALTER TABLE IF EXISTS produtos
+  ADD COLUMN IF NOT EXISTS data_cadastro DATE;
 `;
 
 const criarMovimentacoes = `
@@ -117,6 +123,8 @@ const inserirMovimentacoes = `
 async function iniciarBanco() {
   try {
     await pool.query(criarProdutos);
+    await pool.query(adicionarColunaDataCadastro);
+    await pool.query('UPDATE produtos SET data_cadastro = CURRENT_DATE WHERE data_cadastro IS NULL');
     await pool.query(criarMovimentacoes);
 
     const { rows } = await pool.query('SELECT COUNT(*) AS total FROM produtos');
