@@ -38,29 +38,95 @@ router.post('/cadastrar', (req, res) => {
   );
 });
 
-// Registrar entrada no estoque
-router.post('/entrada', (req, res) => {
-  const { id, quantidade } = req.body;
+// Excluir produto
+router.delete('/deletar/:id', (req, res) => {
+  const { id } = req.params;
 
-  if (!id || quantidade == null) {
-    return res.status(400).json({ error: 'Campos "id" e "quantidade" são obrigatórios.' });
+  if (!id) {
+    return res.status(400).json({ error: 'ID do produto é obrigatório.' });
   }
 
-  db.query(
-    'UPDATE produtos SET quantidade = quantidade + ? WHERE id = ?',
-    [quantidade, id],
-    (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: 'Erro ao registrar entrada de produto' });
+  db.query('DELETE FROM movimentacoes WHERE produtos_id = ?', [id], (err) => {
+    if (err) {
+      console.error('Erro ao remover movimentações do produto:', err);
+      return res.status(500).json({ error: 'Erro ao excluir movimentações do produto' });
+    }
+
+    db.query('DELETE FROM produtos WHERE id = ?', [id], (errDelete, results) => {
+      if (errDelete) {
+        return res.status(500).json({ error: 'Erro ao deletar produto' });
       }
 
-      if (results.affectedRows === 0) {
+      if ((results?.rowCount ?? 0) === 0) {
         return res.status(404).json({ error: 'Produto não encontrado' });
       }
 
-      return res.status(200).json({ message: 'Entrada de produto registrada com sucesso' });
+      return res.status(200).json({ message: 'Produto removido com sucesso' });
+    });
+  });
+});
+
+function registrarMovimentacao({ id, quantidade, tipo, res }) {
+  if (!id || quantidade == null || quantidade <= 0) {
+    return res.status(400).json({ error: 'Informe um ID e uma quantidade maior que zero.' });
+  }
+
+  const dataAtual = new Date().toISOString().slice(0, 10);
+
+  db.query('SELECT quantidade FROM produtos WHERE id = ?', [id], (err, produtoResult) => {
+    if (err) {
+      return res.status(500).json({ error: 'Erro ao localizar produto.' });
     }
-  );
+
+    const produtoAtual = produtoResult?.rows?.[0] || produtoResult?.[0];
+
+    if (!produtoAtual) {
+      return res.status(404).json({ error: 'Produto não encontrado' });
+    }
+
+    const estoqueAtual = Number(produtoAtual.quantidade ?? produtoAtual[0]?.quantidade ?? 0);
+    const novaQuantidade = tipo === 'saida' ? estoqueAtual - Number(quantidade) : estoqueAtual + Number(quantidade);
+
+    if (tipo === 'saida' && novaQuantidade < 0) {
+      return res.status(400).json({ error: 'Quantidade de saída maior que o estoque atual.' });
+    }
+
+    db.query(
+      'UPDATE produtos SET quantidade = ? WHERE id = ?',
+      [novaQuantidade, id],
+      (errUpdate) => {
+        if (errUpdate) {
+          return res.status(500).json({ error: `Erro ao registrar ${tipo} do produto` });
+        }
+
+        db.query(
+          'INSERT INTO movimentacoes (datas, tipo, quantidade, produtos_id) VALUES (?, ?, ?, ?)',
+          [dataAtual, tipo, quantidade, id],
+          (errInsert) => {
+            if (errInsert) {
+              return res.status(500).json({ error: 'Erro ao registrar movimentação.' });
+            }
+
+            return res.status(200).json({
+              message: tipo === 'entrada' ? 'Entrada de produto registrada com sucesso' : 'Saída de produto registrada com sucesso',
+            });
+          }
+        );
+      }
+    );
+  });
+}
+
+// Registrar entrada no estoque
+router.post('/entrada', (req, res) => {
+  const { id, quantidade } = req.body;
+  registrarMovimentacao({ id, quantidade, tipo: 'entrada', res });
+});
+
+// Registrar saída no estoque
+router.post('/saida', (req, res) => {
+  const { id, quantidade } = req.body;
+  registrarMovimentacao({ id, quantidade, tipo: 'saida', res });
 });
 
 // Listar valor total por categoria

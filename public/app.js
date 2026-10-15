@@ -30,6 +30,20 @@ const formatarMoeda = (valor) => {
   }).format(valor || 0);
 };
 
+function obterStatusProduto(produto) {
+  const quantidade = Number(produto.quantidade) || 0;
+
+  if (quantidade <= 0) {
+    return { texto: 'Sem estoque', classe: 'status-critical' };
+  }
+
+  if (quantidade >= 100) {
+    return { texto: 'Limite', classe: 'status-warning' };
+  }
+
+  return { texto: 'Ativo', classe: 'status-ok' };
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
   tbody.innerHTML = '';
@@ -37,7 +51,7 @@ function renderizarTabela(lista) {
   if (!Array.isArray(lista) || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; color: var(--text-muted, #a091c4); padding: 20px;">
+        <td colspan="8" style="text-align: center; color: var(--text-muted, #a091c4); padding: 20px;">
           Nenhum produto encontrado.
         </td>
       </tr>`;
@@ -52,6 +66,7 @@ function renderizarTabela(lista) {
   lista.forEach((prod) => {
     const qtd = Number(prod.quantidade) || 0;
     const val = Number(prod.valor) || 0;
+    const status = obterStatusProduto(prod);
 
     totalItens += qtd;
     valorTotal += qtd * val;
@@ -65,7 +80,15 @@ function renderizarTabela(lista) {
       <td>${prod.categoria}</td>
       <td>${prod.unidade_medida}</td>
       <td>
-        <span style="color: var(--gold-soft, #f0d79a); font-size: 0.85rem;">Ativo</span>
+        <span class="status-badge ${status.classe}">${status.texto}</span>
+      </td>
+      <td>
+        <div class="table-actions">
+          <input type="number" class="qty-adjust" min="1" value="1" aria-label="Quantidade para movimentação de ${prod.nome}" />
+          <button class="btn-move btn-entry" type="button" data-id="${prod.id}" data-tipo="entrada">+ Entrada</button>
+          <button class="btn-move btn-exit" type="button" data-id="${prod.id}" data-tipo="saida">- Saída</button>
+          <button class="btn-delete" type="button" data-id="${prod.id}">Excluir</button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -74,6 +97,7 @@ function renderizarTabela(lista) {
   if (sumCount) sumCount.textContent = totalItens;
   if (sumValue) sumValue.textContent = formatarMoeda(valorTotal);
 }
+
 
 // 1. Carregar produtos do backend
 async function carregarProdutos() {
@@ -111,6 +135,76 @@ if (reloadBtn) {
   reloadBtn.addEventListener('click', () => {
     if (searchInput) searchInput.value = '';
     carregarProdutos();
+  });
+}
+
+async function movimentarEstoque(id, tipo, quantidade) {
+  const numero = Number(quantidade);
+
+  if (!id || !Number.isFinite(numero) || numero <= 0) {
+    exibirMensagem('Informe uma quantidade válida para movimentar o estoque.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/${tipo}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, quantidade: numero })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.error || `Erro ao registrar ${tipo === 'entrada' ? 'entrada' : 'saída'} do produto.`);
+    }
+
+    exibirMensagem(data.message || 'Movimentação registrada com sucesso.', 'success');
+    await carregarProdutos();
+  } catch (err) {
+    console.error('Erro na movimentação do estoque:', err);
+    exibirMensagem(err.message || 'Erro ao movimentar estoque.', 'error');
+  }
+}
+
+// 4. Excluir e movimentar produto
+if (tbody) {
+  tbody.addEventListener('click', async (event) => {
+    const moveButton = event.target.closest('.btn-move');
+    if (moveButton) {
+      const id = moveButton.dataset.id;
+      const tipo = moveButton.dataset.tipo;
+      const input = moveButton.closest('.table-actions')?.querySelector('.qty-adjust');
+      const quantidade = input ? Number(input.value) : 1;
+      await movimentarEstoque(id, tipo, quantidade);
+      return;
+    }
+
+    const deleteButton = event.target.closest('.btn-delete');
+    if (!deleteButton) return;
+
+    const id = deleteButton.dataset.id;
+    const produto = todosProdutos.find((item) => String(item.id) === String(id));
+
+    if (!produto) return;
+
+    const confirmar = window.confirm(`Deseja realmente excluir o produto "${produto.nome}"?`);
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(`${API_URL}/deletar/${id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao excluir produto');
+      }
+
+      exibirMensagem(`Produto "${produto.nome}" removido com sucesso.`, 'success');
+      await carregarProdutos();
+    } catch (err) {
+      console.error('Erro ao excluir produto:', err);
+      exibirMensagem(err.message || 'Erro ao excluir produto.', 'error');
+    }
   });
 }
 
