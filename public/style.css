@@ -583,3 +583,10 @@ tbody tr:hover {
     gap: 8px;
   }
 }
+
+/* Ícone do calendário visível sobre o campo escuro */
+input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 1;
+  cursor: pointer;
+}
