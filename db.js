@@ -1,23 +1,14 @@
 const mysql = require('mysql2');
-const dotenv = require('dotenv');
 
-dotenv.config();
-
-const connection = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || process.env.DB_DATABASE,
-  port: Number(process.env.DB_PORT || 3306),
+const db = mysql.createPool({
+  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
+  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'saep',
+  port: Number(process.env.MYSQLPORT) || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-connection.getConnection((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err);
-    return;
-  }
-
-  console.log('Conexão com o banco de dados estabelecida com sucesso!');
-});
-
-module.exports = connection;
+module.exports = db;
