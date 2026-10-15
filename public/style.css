@@ -472,13 +472,19 @@ tbody tr:hover td:first-child {
 }
 
 .warning-table th,
-.warning-table td {
+.warning-table td,
+.stats-table th,
+.stats-table td,
+.history-table th,
+.history-table td {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(155, 92, 255, 0.12);
   text-align: left;
 }
 
-.warning-table th {
+.warning-table th,
+.stats-table th,
+.history-table th {
   color: var(--gold);
   font-family: 'Cinzel', serif;
   letter-spacing: 1.5px;
@@ -486,7 +492,9 @@ tbody tr:hover td:first-child {
   font-size: 0.72rem;
 }
 
-.warning-table td {
+.warning-table td,
+.stats-table td,
+.history-table td {
   color: var(--text-light);
 }
 
@@ -494,6 +502,32 @@ tbody tr:hover td:first-child {
   color: var(--text-muted);
   text-align: center;
   padding: 18px 12px;
+}
+
+.movement {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.movement.entry {
+  background: rgba(76, 201, 140, 0.12);
+  color: #7ef0b4;
+  border: 1px solid rgba(126, 240, 180, 0.4);
+}
+
+.movement.exit {
+  background: rgba(255, 196, 97, 0.12);
+  color: #ffd36a;
+  border: 1px solid rgba(255, 196, 97, 0.45);
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 /* ---------- Mensagens ---------- */

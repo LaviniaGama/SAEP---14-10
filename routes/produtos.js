@@ -153,12 +153,47 @@ router.get('/valor-total', (req, res) => {
   );
 });
 
+// Listar todas as entradas
+router.get('/entradas', (req, res) => {
+  db.query("SELECT * FROM movimentacoes WHERE tipo = 'entrada' ORDER BY datas DESC, id DESC", (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erro ao buscar entradas de produtos' });
+    }
+    res.json(results.rows);
+  });
+});
+
 // Listar todas as saídas
 router.get('/saidas', (req, res) => {
-  db.query("SELECT * FROM movimentacoes WHERE tipo = 'saida' ORDER BY datas DESC", (err, results) => {
+  db.query("SELECT * FROM movimentacoes WHERE tipo = 'saida' ORDER BY datas DESC, id DESC", (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Erro ao buscar saídas de produtos' });
+    }
+    res.json(results.rows);
+  });
+});
+
+// Histórico completo de movimentações
+router.get('/historico', (req, res) => {
+  const querySQL = `
+    SELECT
+      m.id,
+      m.datas,
+      m.tipo,
+      m.quantidade,
+      p.nome AS nome_do_produto,
+      p.categoria
+    FROM movimentacoes m
+    INNER JOIN produtos p ON p.id = m.produtos_id
+    ORDER BY m.datas DESC, m.id DESC;
+  `;
+
+  db.query(querySQL, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Erro ao buscar histórico de movimentações' });
     }
     res.json(results.rows);
   });
@@ -213,26 +248,63 @@ router.get('/movimentacoes', (req, res) => {
 router.get('/maiores-saidas', (req, res) => {
   const { data_inicial, data_final } = req.query;
 
-  if (!data_inicial || !data_final) {
-    return res.status(400).json({ error: 'Por favor, informe data_inicial e data_final na URL.' });
-  }
-
-  const querySQL = `
+  let querySQL = `
     SELECT
       p.nome AS nome_do_produto,
       SUM(m.quantidade) AS quantidade_total_de_saidas,
       SUM(m.quantidade * p.valor) AS valor_total_financeiro_das_saidas
     FROM produtos p
     INNER JOIN movimentacoes m ON p.id = m.produtos_id
-    WHERE m.tipo = 'saida' AND m.datas BETWEEN ? AND ?
-    GROUP BY p.id, p.nome
-    ORDER BY quantidade_total_de_saidas DESC;
-  `;
+    WHERE m.tipo = 'saida'`;
 
-  db.query(querySQL, [data_inicial, data_final], (err, results) => {
+  const params = [];
+
+  if (data_inicial && data_final) {
+    querySQL += ` AND m.datas BETWEEN ? AND ?`;
+    params.push(data_inicial, data_final);
+  }
+
+  querySQL += `
+    GROUP BY p.id, p.nome
+    ORDER BY quantidade_total_de_saidas DESC;`;
+
+  db.query(querySQL, params, (err, results) => {
     if (err) {
       console.error('ERRO NO BANCO (ROTA MAIORES SAÍDAS) ->', err);
       return res.status(500).json({ error: 'Erro ao buscar produtos com maiores saídas' });
+    }
+    res.json(results.rows);
+  });
+});
+
+// Listar produtos com maior volume de entrada
+router.get('/maiores-entradas', (req, res) => {
+  const { data_inicial, data_final } = req.query;
+
+  let querySQL = `
+    SELECT
+      p.nome AS nome_do_produto,
+      SUM(m.quantidade) AS quantidade_total_de_entradas,
+      SUM(m.quantidade * p.valor) AS valor_total_financeiro_das_entradas
+    FROM produtos p
+    INNER JOIN movimentacoes m ON p.id = m.produtos_id
+    WHERE m.tipo = 'entrada'`;
+
+  const params = [];
+
+  if (data_inicial && data_final) {
+    querySQL += ` AND m.datas BETWEEN ? AND ?`;
+    params.push(data_inicial, data_final);
+  }
+
+  querySQL += `
+    GROUP BY p.id, p.nome
+    ORDER BY quantidade_total_de_entradas DESC;`;
+
+  db.query(querySQL, params, (err, results) => {
+    if (err) {
+      console.error('ERRO NO BANCO (ROTA MAIORES ENTRADAS) ->', err);
+      return res.status(500).json({ error: 'Erro ao buscar produtos com maiores entradas' });
     }
     res.json(results.rows);
   });

@@ -9,6 +9,9 @@ const searchInput = document.getElementById('search-input');
 const reloadBtn = document.getElementById('reload-btn');
 const messageDiv = document.getElementById('form-message');
 const limitAlertsBody = document.getElementById('limit-alerts-body');
+const topSaidasBody = document.getElementById('top-saidas-body');
+const topEntradasBody = document.getElementById('top-entradas-body');
+const historyBody = document.getElementById('history-body');
 
 let todosProdutos = [];
 
@@ -91,6 +94,60 @@ function renderizarAlertasLimite(lista) {
     .join('');
 }
 
+function preencherTabelaResumo(tableBody, itens, tipo) {
+  if (!tableBody) return;
+
+  if (!Array.isArray(itens) || !itens.length) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="3" class="alert-empty">Nenhum dado para ${tipo}.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tableBody.innerHTML = itens
+    .map((item) => {
+      const nome = item.nome_do_produto || item.nome || 'Produto';
+      const quantidade = Number(item.quantidade_total_de_saidas ?? item.quantidade_total_de_entradas ?? item.quantidade ?? 0);
+      const valor = Number(item.valor_total_financeiro_das_saidas ?? item.valor_total_financeiro_das_entradas ?? 0);
+
+      return `
+        <tr>
+          <td><strong>${nome}</strong></td>
+          <td>${quantidade}</td>
+          <td>${formatarMoeda(valor)}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+function preencherHistorico(itens) {
+  if (!historyBody) return;
+
+  if (!Array.isArray(itens) || !itens.length) {
+    historyBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="alert-empty">Nenhuma movimentação registrada.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  historyBody.innerHTML = itens
+    .map((item) => `
+      <tr>
+        <td>${formatarData(item.datas)}</td>
+        <td><span class="movement ${item.tipo === 'entrada' ? 'entry' : 'exit'}">${item.tipo}</span></td>
+        <td>${item.nome_do_produto}</td>
+        <td>${item.quantidade}</td>
+        <td>${item.categoria || '-'}</td>
+      </tr>
+    `)
+    .join('');
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
   tbody.innerHTML = '';
@@ -156,6 +213,25 @@ async function carregarProdutos() {
           Erro ao conectar com o banco de dados.
         </td>
       </tr>`;
+  }
+}
+
+async function carregarEstatisticas() {
+  try {
+    const [saidas, entradas, historico] = await Promise.all([
+      fetch(`${API_URL}/maiores-saidas`).then((res) => res.ok ? res.json() : Promise.reject(new Error('Erro ao carregar saídas'))),
+      fetch(`${API_URL}/maiores-entradas`).then((res) => res.ok ? res.json() : Promise.reject(new Error('Erro ao carregar entradas'))),
+      fetch(`${API_URL}/historico`).then((res) => res.ok ? res.json() : Promise.reject(new Error('Erro ao carregar histórico'))),
+    ]);
+
+    preencherTabelaResumo(topSaidasBody, saidas, 'saídas');
+    preencherTabelaResumo(topEntradasBody, entradas, 'entradas');
+    preencherHistorico(historico);
+  } catch (err) {
+    console.error('Erro ao carregar estatísticas:', err);
+    if (topSaidasBody) topSaidasBody.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar saídas.</td></tr>';
+    if (topEntradasBody) topEntradasBody.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar entradas.</td></tr>';
+    if (historyBody) historyBody.innerHTML = '<tr><td colspan="5" class="alert-empty">Erro ao carregar histórico.</td></tr>';
   }
 }
 
@@ -289,4 +365,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // Inicialização
-document.addEventListener('DOMContentLoaded', carregarProdutos);
+document.addEventListener('DOMContentLoaded', () => {
+  carregarProdutos();
+  carregarEstatisticas();
+});
