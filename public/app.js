@@ -309,42 +309,45 @@ async function carregarEstatisticas() {
   }
 }
 
+function formatarDataParaInput(data) {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+function inicializarDatasMovimentacao() {
+  if (!dataInicialMovimentacao || !dataFinalMovimentacao) return;
+  const hoje = new Date();
+  const inicioPadrao = new Date(hoje);
+  inicioPadrao.setDate(inicioPadrao.getDate() - 30);
+  if (!dataInicialMovimentacao.value) dataInicialMovimentacao.value = formatarDataParaInput(inicioPadrao);
+  if (!dataFinalMovimentacao.value) dataFinalMovimentacao.value = formatarDataParaInput(hoje);
+  dataFinalMovimentacao.min = dataInicialMovimentacao.value;
+  dataInicialMovimentacao.max = dataFinalMovimentacao.value;
+}
+
 async function carregarMovimentacoes() {
-  const dataInicial = dataInicialMovimentacao ? dataInicialMovimentacao.value : '';
-  const dataFinal = dataFinalMovimentacao ? dataFinalMovimentacao.value : '';
-
-  if (!dataInicial || !dataFinal) {
-    const hoje = new Date();
-    const inicioPadrao = new Date(hoje);
-    inicioPadrao.setDate(hoje.getDate() - 30);
-
-    const formatarDataInput = (date) => date.toISOString().slice(0, 10);
-
-    if (dataInicialMovimentacao) dataInicialMovimentacao.value = formatarDataInput(inicioPadrao);
-    if (dataFinalMovimentacao) dataFinalMovimentacao.value = formatarDataInput(hoje);
-  }
-
+  inicializarDatasMovimentacao();
   const inicio = dataInicialMovimentacao ? dataInicialMovimentacao.value : '';
   const fim = dataFinalMovimentacao ? dataFinalMovimentacao.value : '';
 
   if (!inicio || !fim) {
-    if (movimentacaoBody) {
-      movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Informe as datas para consultar.</td></tr>';
-    }
+    if (movimentacaoBody) movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Selecione as datas para consultar.</td></tr>';
+    return;
+  }
+  if (inicio > fim) {
+    if (movimentacaoBody) movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">A data inicial deve ser anterior ou igual à data final.</td></tr>';
     return;
   }
 
   try {
     const res = await fetch(`${API_URL}/movimentacoes?data_inicial=${encodeURIComponent(inicio)}&data_final=${encodeURIComponent(fim)}`);
-    if (!res.ok) throw new Error('Erro ao consultar movimentaÃ§Ãµes');
-
-    const dados = await res.json();
-    preencherMovimentacoes(dados);
+    if (!res.ok) throw new Error('Erro ao consultar movimentações');
+    preencherMovimentacoes(await res.json());
   } catch (err) {
-    console.error('Erro ao carregar movimentaÃ§Ãµes do perÃ­odo:', err);
-    if (movimentacaoBody) {
-      movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Erro ao consultar movimentaÃ§Ãµes.</td></tr>';
-    }
+    console.error('Erro ao carregar movimentações do período:', err);
+    if (movimentacaoBody) movimentacaoBody.innerHTML = '<tr><td colspan="7" class="alert-empty">Erro ao consultar movimentações.</td></tr>';
   }
 }
 
@@ -368,6 +371,20 @@ if (reloadBtn) {
   });
 }
 
+if (dataInicialMovimentacao && dataFinalMovimentacao) {
+  dataInicialMovimentacao.addEventListener('change', () => {
+    dataFinalMovimentacao.min = dataInicialMovimentacao.value;
+    if (dataFinalMovimentacao.value && dataFinalMovimentacao.value < dataInicialMovimentacao.value) {
+      dataFinalMovimentacao.value = dataInicialMovimentacao.value;
+    }
+  });
+  dataFinalMovimentacao.addEventListener('change', () => {
+    dataInicialMovimentacao.max = dataFinalMovimentacao.value;
+    if (dataInicialMovimentacao.value && dataInicialMovimentacao.value > dataFinalMovimentacao.value) {
+      dataInicialMovimentacao.value = dataFinalMovimentacao.value;
+    }
+  });
+}
 if (btnConsultarMovimentacoes) {
   btnConsultarMovimentacoes.addEventListener('click', () => {
     carregarMovimentacoes();
