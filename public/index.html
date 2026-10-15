@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -6,212 +6,274 @@
   <title>Gestão de Produtos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="bg-layer"></div>
-  <div class="particles"></div>
-
-  <header class="hero">
-    <div class="hero-content">
-      <span class="eye-symbol">⚡</span>
-      <h1 class="title">Gestão de Produtos</h1>
-      <p class="subtitle">— Controle de Estoque —</p>
-      <div class="divider">
-        <span></span>
-        <span class="diamond">◆</span>
-        <span></span>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-    <!-- Formulário -->
-    <section class="card form-card">
-      <div class="card-header">
-        <h2>✦ Novo Produto</h2>
-      </div>
-
-      <form id="product-form" class="product-form" novalidate>
-        <div class="form-group">
-          <label for="nome">Nome</label>
-          <input type="text" id="nome" name="nome" required placeholder="Ex: Espada Musou" />
+  <div class="dashboard-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">◈</span>
+        <div class="brand-text">
+          <strong>Gestão de Estoque</strong>
         </div>
+      </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="quantidade">Quantidade</label>
-            <input type="number" id="quantidade" name="quantidade" min="0" step="1" required placeholder="0" />
+      <nav class="sidebar-nav" aria-label="Menu lateral">
+        <button class="nav-item active" data-view="dashboard-view" type="button">Dashboard</button>
+        <button class="nav-item" data-view="produto-view" type="button">Novo Produto</button>
+        <button class="nav-item" data-view="entrada-view" type="button">Entradas</button>
+        <button class="nav-item" data-view="saida-view" type="button">Saídas</button>
+        <button class="nav-item" data-view="historico-view" type="button">Histórico</button>
+      </nav>
+    </aside>
+
+    <main class="main-panel">
+      <section id="dashboard-view" class="view-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>Dashboard</h1>
+          </div>
+          <span class="status-pill">Sistema de estoque</span>
+        </header>
+
+        <section class="stats-grid">
+          <article class="stat-card">
+            <label>Produtos cadastrados</label>
+            <strong id="sidebar-total">0</strong>
+          </article>
+          <article class="stat-card">
+            <label>Unidades em estoque</label>
+            <strong id="sum-count">0</strong>
+          </article>
+          <article class="stat-card">
+            <label>Valor total</label>
+            <strong id="sum-value">R$ 0,00</strong>
+          </article>
+          <article class="stat-card">
+            <label>Alertas</label>
+            <strong id="alert-count">0</strong>
+          </article>
+        </section>
+
+        <section class="card alert-card">
+          <div class="card-header">
+            <h2>⚠️ Itens acima de 100 unidades</h2>
           </div>
 
-          <div class="form-group">
-            <label for="valor">Valor (R$)</label>
-            <input type="number" id="valor" name="valor" step="0.01" min="0" required placeholder="0.00" />
+          <div class="table-wrapper">
+            <table class="warning-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Categoria</th>
+                </tr>
+              </thead>
+              <tbody id="limit-alerts-body"></tbody>
+            </table>
           </div>
-        </div>
+        </section>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="categoria">Categoria</label>
-            <input type="text" id="categoria" name="categoria" required placeholder="Ex: Armas" />
+        <section class="card list-card">
+          <div class="card-header list-header">
+            <h2>✦ Produtos Cadastrados</h2>
+            <div class="header-actions">
+              <input type="search" id="search-input" class="search-input" placeholder="Buscar por nome ou categoria..." />
+              <button id="reload-btn" class="btn-ghost" title="Recarregar">↻</button>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="unidade_medida">Unidade de Medida</label>
-            <select id="unidade_medida" name="unidade_medida" required>
-              <option value="">Selecione...</option>
-              <option value="un">Unidade</option>
-              <option value="kg">Quilograma</option>
-              <option value="g">Grama</option>
-              <option value="l">Litro</option>
-              <option value="ml">Mililitro</option>
-              <option value="cx">Caixa</option>
-              <option value="pct">Pacote</option>
-            </select>
+          <div class="table-wrapper">
+            <table id="products-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nome</th>
+                  <th>Qtd</th>
+                  <th>Valor</th>
+                  <th>Categoria</th>
+                  <th>Unidade</th>
+                  <th>Data</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="products-body"></tbody>
+            </table>
+            <div id="loading" class="loading hidden">Carregando produtos...</div>
+            <div id="empty-state" class="empty-state hidden">Nenhum produto cadastrado ainda.</div>
           </div>
-        </div>
+        </section>
+      </section>
 
-        <button type="submit" class="btn-primary">
-          <span class="btn-icon">⚡</span>
-          <span>Cadastrar</span>
-        </button>
+      <section id="produto-view" class="view-panel hidden">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Produtos</p>
+            <h1>Novo Produto</h1>
+          </div>
+        </header>
 
-        <div id="form-message" class="message"></div>
-      </form>
-    </section>
+        <section class="card form-card">
+          <div class="card-header">
+            <h2>✦ Novo Produto</h2>
+          </div>
 
-    <!-- Lista -->
-    <section class="card list-card">
-      <div class="card-header">
-        <h2>✦ Produtos Cadastrados</h2>
-        <div class="header-actions">
-          <input
-            type="search"
-            id="search-input"
-            class="search-input"
-            placeholder="Buscar por nome ou categoria..."
-          />
-          <button id="reload-btn" class="btn-ghost" title="Recarregar">↻</button>
-        </div>
-      </div>
+          <form id="product-form-alt" class="product-form" novalidate>
+            <div class="form-group">
+              <label for="nome-alt">Nome</label>
+              <input type="text" id="nome-alt" name="nome" required placeholder="Ex: Espada Musou" />
+            </div>
 
-      <div class="table-wrapper">
-        <table id="products-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nome</th>
-              <th>Qtd</th>
-              <th>Valor</th>
-              <th>Categoria</th>
-              <th>Unidade</th>
-              <th>Data</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="products-body"></tbody>
-        </table>
-        <div id="loading" class="loading hidden">Carregando produtos...</div>
-        <div id="empty-state" class="empty-state hidden">
-          Nenhum produto cadastrado ainda.
-        </div>
-      </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="quantidade-alt">Quantidade</label>
+                <input type="number" id="quantidade-alt" name="quantidade" min="0" step="1" required placeholder="0" />
+              </div>
 
-      <div class="summary">
-        <span>Total de itens: <strong id="sum-count">0</strong></span>
-        <span>Valor total: <strong id="sum-value">R$ 0,00</strong></span>
-      </div>
-    </section>
+              <div class="form-group">
+                <label for="valor-alt">Valor (R$)</label>
+                <input type="number" id="valor-alt" name="valor" step="0.01" min="0" required placeholder="0.00" />
+              </div>
+            </div>
 
-    <section class="card alert-card">
-      <div class="card-header">
-        <h2>⚠️ Itens acima de 100 unidades</h2>
-      </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="categoria-alt">Categoria</label>
+                <input type="text" id="categoria-alt" name="categoria" required placeholder="Ex: Armas" />
+              </div>
 
-      <div class="table-wrapper">
-        <table class="warning-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>Categoria</th>
-            </tr>
-          </thead>
-          <tbody id="limit-alerts-body"></tbody>
-        </table>
-      </div>
-    </section>
+              <div class="form-group">
+                <label for="unidade_medida-alt">Unidade de Medida</label>
+                <select id="unidade_medida-alt" name="unidade_medida" required>
+                  <option value="">Selecione...</option>
+                  <option value="un">Unidade</option>
+                  <option value="kg">Quilograma</option>
+                  <option value="g">Grama</option>
+                  <option value="l">Litro</option>
+                  <option value="ml">Mililitro</option>
+                  <option value="cx">Caixa</option>
+                  <option value="pct">Pacote</option>
+                </select>
+              </div>
+            </div>
 
-    <section class="card analytics-card">
-      <div class="card-header">
-        <h2>📉 Maior volume de saída</h2>
-      </div>
+            <button type="submit" class="btn-primary">
+              <span class="btn-icon">⚡</span>
+              <span>Cadastrar</span>
+            </button>
 
-      <div class="table-wrapper">
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody id="top-saidas-body"></tbody>
-        </table>
-      </div>
-    </section>
+            <div id="form-message-alt" class="message"></div>
+          </form>
+        </section>
+      </section>
 
-    <section class="card analytics-card">
-      <div class="card-header">
-        <h2>📈 Maior volume de entrada</h2>
-      </div>
+      <section id="entrada-view" class="view-panel hidden">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Estoque</p>
+            <h1>Entradas</h1>
+          </div>
+        </header>
 
-      <div class="table-wrapper">
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody id="top-entradas-body"></tbody>
-        </table>
-      </div>
-    </section>
+        <section class="card analytics-card">
+          <div class="card-header">
+            <h2>📈 Maior volume de entrada</h2>
+          </div>
 
-    <section class="card analytics-card full-width">
-      <div class="card-header">
-        <h2>🧾 Histórico de entradas e saídas</h2>
-      </div>
+          <div class="table-wrapper">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody id="top-entradas-body-alt"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
 
-      <div class="table-wrapper">
-        <table class="history-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Tipo</th>
-              <th>Produto</th>
-              <th>Quantidade</th>
-              <th>Categoria</th>
-            </tr>
-          </thead>
-          <tbody id="history-body"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+      <section id="saida-view" class="view-panel hidden">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Estoque</p>
+            <h1>Saídas</h1>
+          </div>
+        </header>
 
-  <footer class="footer">
-    <p>⚡ Sistema de Gestão de Produtos ⚡</p>
-  </footer>
+        <section class="card analytics-card">
+          <div class="card-header">
+            <h2>📉 Maior volume de saída</h2>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody id="top-saidas-body-alt"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="historico-view" class="view-panel hidden">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Movimentações</p>
+            <h1>Histórico</h1>
+          </div>
+        </header>
+
+        <section class="card analytics-card full-width">
+          <div class="card-header">
+            <h2>🧾 Histórico de entradas e saídas</h2>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Categoria</th>
+                </tr>
+              </thead>
+              <tbody id="history-body-alt"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
 
   <script src="app.js"></script>
+  <script>
+    const navButtons = document.querySelectorAll('.nav-item');
+    const viewPanels = document.querySelectorAll('.view-panel');
+
+    navButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const targetId = button.dataset.view;
+
+        navButtons.forEach((item) => item.classList.toggle('active', item === button));
+        viewPanels.forEach((panel) => {
+          panel.classList.toggle('hidden', panel.id !== targetId);
+        });
+      });
+    });
+  </script>
 </body>
 </html>

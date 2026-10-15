@@ -2,27 +2,32 @@ const API_URL = '/api';
 
 // Elementos do DOM
 const form = document.getElementById('product-form');
+const formAlt = document.getElementById('product-form-alt');
 const tbody = document.getElementById('products-body');
 const sumCount = document.getElementById('sum-count');
 const sumValue = document.getElementById('sum-value');
 const searchInput = document.getElementById('search-input');
 const reloadBtn = document.getElementById('reload-btn');
 const messageDiv = document.getElementById('form-message');
+const messageDivAlt = document.getElementById('form-message-alt');
 const limitAlertsBody = document.getElementById('limit-alerts-body');
 const topSaidasBody = document.getElementById('top-saidas-body');
+const topSaidasBodyAlt = document.getElementById('top-saidas-body-alt');
 const topEntradasBody = document.getElementById('top-entradas-body');
+const topEntradasBodyAlt = document.getElementById('top-entradas-body-alt');
 const historyBody = document.getElementById('history-body');
+const historyBodyAlt = document.getElementById('history-body-alt');
 
 let todosProdutos = [];
 
 // Exibir mensagens na div do formulário
-function exibirMensagem(texto, tipo = 'success') {
-  if (!messageDiv) return;
-  messageDiv.textContent = texto;
-  messageDiv.className = `message ${tipo}`;
+function exibirMensagem(texto, tipo = 'success', alvo = messageDiv) {
+  if (!alvo) return;
+  alvo.textContent = texto;
+  alvo.className = `message ${tipo}`;
   setTimeout(() => {
-    messageDiv.textContent = '';
-    messageDiv.className = 'message';
+    alvo.textContent = '';
+    alvo.className = 'message';
   }, 4000);
 }
 
@@ -123,11 +128,11 @@ function preencherTabelaResumo(tableBody, itens, tipo) {
     .join('');
 }
 
-function preencherHistorico(itens) {
-  if (!historyBody) return;
+function preencherHistoricoEmTabela(tableBody, itens) {
+  if (!tableBody) return;
 
   if (!Array.isArray(itens) || !itens.length) {
-    historyBody.innerHTML = `
+    tableBody.innerHTML = `
       <tr>
         <td colspan="5" class="alert-empty">Nenhuma movimentação registrada.</td>
       </tr>
@@ -135,7 +140,7 @@ function preencherHistorico(itens) {
     return;
   }
 
-  historyBody.innerHTML = itens
+  tableBody.innerHTML = itens
     .map((item) => `
       <tr>
         <td>${formatarData(item.datas)}</td>
@@ -148,8 +153,17 @@ function preencherHistorico(itens) {
     .join('');
 }
 
+function preencherHistorico(itens) {
+  preencherHistoricoEmTabela(historyBody, itens);
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
+  if (!tbody) {
+    atualizarResumo(Array.isArray(lista) ? lista : []);
+    return;
+  }
+
   tbody.innerHTML = '';
 
   if (!Array.isArray(lista) || lista.length === 0) {
@@ -207,12 +221,14 @@ async function carregarProdutos() {
     renderizarTabela(todosProdutos);
   } catch (err) {
     console.error('Erro ao carregar produtos:', err);
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align: center; color: var(--danger, #ff8b9a); padding: 20px;">
-          Erro ao conectar com o banco de dados.
-        </td>
-      </tr>`;
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--danger, #ff8b9a); padding: 20px;">
+            Erro ao conectar com o banco de dados.
+          </td>
+        </tr>`;
+    }
   }
 }
 
@@ -227,11 +243,18 @@ async function carregarEstatisticas() {
     preencherTabelaResumo(topSaidasBody, saidas, 'saídas');
     preencherTabelaResumo(topEntradasBody, entradas, 'entradas');
     preencherHistorico(historico);
+
+    if (topSaidasBodyAlt) preencherTabelaResumo(topSaidasBodyAlt, saidas, 'saídas');
+    if (topEntradasBodyAlt) preencherTabelaResumo(topEntradasBodyAlt, entradas, 'entradas');
+    if (historyBodyAlt) preencherHistoricoEmTabela(historyBodyAlt, historico);
   } catch (err) {
     console.error('Erro ao carregar estatísticas:', err);
     if (topSaidasBody) topSaidasBody.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar saídas.</td></tr>';
     if (topEntradasBody) topEntradasBody.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar entradas.</td></tr>';
     if (historyBody) historyBody.innerHTML = '<tr><td colspan="5" class="alert-empty">Erro ao carregar histórico.</td></tr>';
+    if (topSaidasBodyAlt) topSaidasBodyAlt.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar saídas.</td></tr>';
+    if (topEntradasBodyAlt) topEntradasBodyAlt.innerHTML = '<tr><td colspan="3" class="alert-empty">Erro ao carregar entradas.</td></tr>';
+    if (historyBodyAlt) historyBodyAlt.innerHTML = '<tr><td colspan="5" class="alert-empty">Erro ao carregar histórico.</td></tr>';
   }
 }
 
@@ -327,45 +350,59 @@ if (tbody) {
   });
 }
 
-// 4. Submissão do formulário
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+function registrarProduto(formulario, mensagemAlvo) {
+  if (!formulario) return;
 
-  const novoProduto = {
-    nome: document.getElementById('nome').value.trim(),
-    quantidade: Number(document.getElementById('quantidade').value),
-    valor: Number(document.getElementById('valor').value),
-    categoria: document.getElementById('categoria').value.trim(),
-    unidade_medida: document.getElementById('unidade_medida').value
-  };
+  formulario.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  if (!novoProduto.nome || !novoProduto.categoria || !novoProduto.unidade_medida) {
-    exibirMensagem('Preencha todos os campos obrigatórios.', 'error');
-    return;
-  }
+    const campos = {
+      nome: formulario.querySelector('[name="nome"]'),
+      quantidade: formulario.querySelector('[name="quantidade"]'),
+      valor: formulario.querySelector('[name="valor"]'),
+      categoria: formulario.querySelector('[name="categoria"]'),
+      unidade_medida: formulario.querySelector('[name="unidade_medida"]')
+    };
 
-  try {
-    const res = await fetch(`${API_URL}/cadastrar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(novoProduto)
-    });
+    const novoProduto = {
+      nome: (campos.nome?.value || '').trim(),
+      quantidade: Number(campos.quantidade?.value),
+      valor: Number(campos.valor?.value),
+      categoria: (campos.categoria?.value || '').trim(),
+      unidade_medida: campos.unidade_medida?.value
+    };
 
-    const data = await res.json();
-
-    if (res.ok) {
-      exibirMensagem('✦ Produto cadastrado com sucesso!', 'success');
-      form.reset();
-      await carregarProdutos();
-      await carregarEstatisticas();
-    } else {
-      exibirMensagem(data.error || 'Erro ao cadastrar produto.', 'error');
+    if (!novoProduto.nome || !novoProduto.categoria || !novoProduto.unidade_medida) {
+      exibirMensagem('Preencha todos os campos obrigatórios.', 'error', mensagemAlvo);
+      return;
     }
-  } catch (err) {
-    console.error('Erro na requisição:', err);
-    exibirMensagem('Erro ao conectar com o servidor.', 'error');
-  }
-});
+
+    try {
+      const res = await fetch(`${API_URL}/cadastrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novoProduto)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        exibirMensagem('✦ Produto cadastrado com sucesso!', 'success', mensagemAlvo);
+        formulario.reset();
+        await carregarProdutos();
+        await carregarEstatisticas();
+      } else {
+        exibirMensagem(data.error || 'Erro ao cadastrar produto.', 'error', mensagemAlvo);
+      }
+    } catch (err) {
+      console.error('Erro na requisição:', err);
+      exibirMensagem('Erro ao conectar com o servidor.', 'error', mensagemAlvo);
+    }
+  });
+}
+
+if (form) registrarProduto(form, messageDiv);
+if (formAlt) registrarProduto(formAlt, messageDivAlt);
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
