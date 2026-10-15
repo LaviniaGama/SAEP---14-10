@@ -278,6 +278,7 @@ async function movimentarEstoque(id, tipo, quantidade) {
 
     exibirMensagem(data.message || 'Movimentação registrada com sucesso.', 'success');
     await carregarProdutos();
+    await carregarEstatisticas();
   } catch (err) {
     console.error('Erro na movimentação do estoque:', err);
     exibirMensagem(err.message || 'Erro ao movimentar estoque.', 'error');
@@ -318,6 +319,7 @@ if (tbody) {
 
       exibirMensagem(`Produto "${produto.nome}" removido com sucesso.`, 'success');
       await carregarProdutos();
+      await carregarEstatisticas();
     } catch (err) {
       console.error('Erro ao excluir produto:', err);
       exibirMensagem(err.message || 'Erro ao excluir produto.', 'error');
@@ -355,6 +357,7 @@ form.addEventListener('submit', async (e) => {
       exibirMensagem('✦ Produto cadastrado com sucesso!', 'success');
       form.reset();
       await carregarProdutos();
+      await carregarEstatisticas();
     } else {
       exibirMensagem(data.error || 'Erro ao cadastrar produto.', 'error');
     }
