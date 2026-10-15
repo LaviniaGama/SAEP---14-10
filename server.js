@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { iniciarBanco } = require('./db');
 const produtosRouter = require('./routes/produtos');
 
 const app = express();
@@ -23,6 +24,17 @@ app.get('/', (req, res) => {
 
 // Porta dinâmica para o Railway
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+
+async function startServer() {
+  const bancoPronto = await iniciarBanco();
+
+  if (!bancoPronto) {
+    console.warn('Servidor iniciando mesmo com falha na preparação do banco.');
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
+
+startServer();

@@ -8,7 +8,7 @@ router.get('/listar', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Erro ao buscar produtos' });
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
@@ -23,7 +23,7 @@ router.post('/cadastrar', (req, res) => {
   }
 
   db.query(
-    'INSERT INTO produtos (nome, valor, quantidade, categoria, unidade_medida) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO produtos (nome, valor, quantidade, categoria, unidade_medida) VALUES (?, ?, ?, ?, ?) RETURNING id',
     [nome, valor, quantidade, categoria, unidade_medida],
     (err, results) => {
       if (err) {
@@ -32,7 +32,7 @@ router.post('/cadastrar', (req, res) => {
 
       return res.status(201).json({
         message: 'Produto cadastrado com sucesso',
-        id: results.insertId,
+        id: results.rows?.[0]?.id ?? results.insertId,
       });
     }
   );
@@ -71,19 +71,19 @@ router.get('/valor-total', (req, res) => {
       if (err) {
         return res.status(500).json({ error: 'Erro ao buscar valor total por categoria' });
       }
-      res.json(results);
+      res.json(results.rows);
     }
   );
 });
 
 // Listar todas as saídas
 router.get('/saidas', (req, res) => {
-  db.query('SELECT * FROM movimentacoes WHERE tipo = "saida" ORDER BY datas DESC', (err, results) => {
+  db.query("SELECT * FROM movimentacoes WHERE tipo = 'saida' ORDER BY datas DESC", (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Erro ao buscar saídas de produtos' });
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
@@ -95,7 +95,7 @@ router.get('/limites', (req, res) => {
       if (err) {
         return res.status(500).json({ error: 'Erro ao buscar produtos com limites atingidos' });
       }
-      res.json(results);
+      res.json(results.rows);
     }
   );
 });
@@ -128,7 +128,7 @@ router.get('/movimentacoes', (req, res) => {
       console.error('Erro no SQL:', err);
       return res.status(500).json({ error: 'Erro ao buscar movimentações no período' });
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
@@ -157,7 +157,7 @@ router.get('/maiores-saidas', (req, res) => {
       console.error('ERRO NO BANCO (ROTA MAIORES SAÍDAS) ->', err);
       return res.status(500).json({ error: 'Erro ao buscar produtos com maiores saídas' });
     }
-    res.json(results);
+    res.json(results.rows);
   });
 });
 
