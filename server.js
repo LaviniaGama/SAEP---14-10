@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -8,13 +10,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Servir os ficheiros estáticos (HTML, CSS, JS) da pasta public
+// Arquivos estáticos (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Rotas da API (obrigatoriamente sob /api para não conflitar com a página principal)
+// Rotas da API
 app.use('/api', produtosRouter);
 
-// 3. Rota principal: Entrega o index.html quando acede à raiz do site
+// Página principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -22,5 +24,5 @@ app.get('/', (req, res) => {
 // Porta dinâmica para o Railway
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor a rodar na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
