@@ -1,4 +1,4 @@
-const API_URL = '/produtos';
+const API_URL = '/api';
 
 // Elementos do DOM
 const form = document.getElementById('product-form');
