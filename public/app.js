@@ -44,6 +44,15 @@ function obterStatusProduto(produto) {
   return { texto: 'Ativo', classe: 'status-ok' };
 }
 
+function atualizarResumo(lista) {
+  const produtos = Array.isArray(lista) ? lista : [];
+  const totalItens = produtos.reduce((acc, prod) => acc + (Number(prod.quantidade) || 0), 0);
+  const valorTotal = produtos.reduce((acc, prod) => acc + ((Number(prod.quantidade) || 0) * (Number(prod.valor) || 0)), 0);
+
+  if (sumCount) sumCount.textContent = totalItens;
+  if (sumValue) sumValue.textContent = formatarMoeda(valorTotal);
+}
+
 // Renderizar tabela na tela
 function renderizarTabela(lista) {
   tbody.innerHTML = '';
@@ -55,21 +64,14 @@ function renderizarTabela(lista) {
           Nenhum produto encontrado.
         </td>
       </tr>`;
-    if (sumCount) sumCount.textContent = '0';
-    if (sumValue) sumValue.textContent = 'R$ 0,00';
+    atualizarResumo([]);
     return;
   }
-
-  let totalItens = 0;
-  let valorTotal = 0;
 
   lista.forEach((prod) => {
     const qtd = Number(prod.quantidade) || 0;
     const val = Number(prod.valor) || 0;
     const status = obterStatusProduto(prod);
-
-    totalItens += qtd;
-    valorTotal += qtd * val;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -94,8 +96,7 @@ function renderizarTabela(lista) {
     tbody.appendChild(tr);
   });
 
-  if (sumCount) sumCount.textContent = totalItens;
-  if (sumValue) sumValue.textContent = formatarMoeda(valorTotal);
+  atualizarResumo(lista);
 }
 
 
